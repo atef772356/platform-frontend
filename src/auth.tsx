@@ -1,0 +1,5 @@
+import {createContext,useContext,useEffect,useMemo,useState,type ReactNode}from'react'; import type {User}from'./types';
+type Ctx={user:User|null;login:(t:string,u:User)=>void;logout:()=>void};
+const AuthContext=createContext<Ctx|null>(null);
+export function AuthProvider({children}:{children:ReactNode}){const [user,setUser]=useState<User|null>(()=>{try{return JSON.parse(localStorage.getItem('lms_user')||'null')}catch{return null}}); const v=useMemo(()=>({user,login:(t:string,u:User)=>{localStorage.setItem('lms_token',t);localStorage.setItem('lms_user',JSON.stringify(u));setUser(u)},logout:()=>{localStorage.removeItem('lms_token');localStorage.removeItem('lms_user');setUser(null)}}),[user]);useEffect(()=>{const handleUnauthorized=()=>v.logout();window.addEventListener('lms:unauthorized',handleUnauthorized);return()=>window.removeEventListener('lms:unauthorized',handleUnauthorized)},[v]);return <AuthContext.Provider value={v}>{children}</AuthContext.Provider>}
+export const useAuth=()=>{const c=useContext(AuthContext);if(!c)throw Error('AuthProvider missing');return c};
